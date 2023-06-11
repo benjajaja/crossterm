@@ -58,6 +58,19 @@ pub(crate) fn size() -> io::Result<(u16, u16)> {
     ))
 }
 
+pub(crate) fn pixel_size() -> io::Result<PixelSize> {
+    let terminal_size = ScreenBuffer::current()?.info()?.terminal_size();
+    let font_size = ScreenBuffer::current()?.font_info()?.size();
+    let xpixels = terminal_size.width * font_size.0;
+    let ypixels = terminal_size.height * font_size.1;
+    Ok(PixelSize {
+        cols: size.0,
+        rows: size.1,
+        xpixels,
+        ypixels,
+    })
+}
+
 /// Queries the terminal's support for progressive keyboard enhancement.
 ///
 /// This always returns `Ok(false)` on Windows.

@@ -1,14 +1,16 @@
 use crossterm::{
     execute,
-    terminal::{size, SetSize},
+    terminal::{pixel_size, size, SetSize},
     tty::IsTty,
 };
 use std::io::{stdin, stdout};
 
 pub fn main() {
-    println!("{:?}", size().unwrap());
+    println!("size: {:?}", size().unwrap());
     execute!(stdout(), SetSize(10, 10)).unwrap();
-    println!("{:?}", size().unwrap());
+    println!("resized: {:?}", size().unwrap());
+
+    println!("pixel_size: {:?}", pixel_size().unwrap());
 
     if stdin().is_tty() {
         println!("Is TTY");

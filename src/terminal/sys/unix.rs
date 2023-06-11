@@ -1,6 +1,9 @@
 //! UNIX related logic for terminal manipulation.
 
-use crate::terminal::sys::file_descriptor::{tty_fd, FileDesc};
+use crate::terminal::{
+    sys::file_descriptor::{tty_fd, FileDesc},
+    PixelSize,
+};
 use libc::{
     cfmakeraw, ioctl, tcgetattr, tcsetattr, termios as Termios, winsize, STDOUT_FILENO, TCSANOW,
     TIOCGWINSZ,
@@ -46,6 +49,36 @@ pub(crate) fn size() -> io::Result<(u16, u16)> {
     }
 
     tput_size().ok_or_else(|| std::io::Error::last_os_error().into())
+}
+
+#[allow(clippy::useless_conversion)]
+pub(crate) fn pixel_size() -> io::Result<PixelSize> {
+    // http://rosettacode.org/wiki/Terminal_control/Dimensions#Library:_BSD_libc
+    let mut size = winsize {
+        ws_row: 0,
+        ws_col: 0,
+        ws_xpixel: 0,
+        ws_ypixel: 0,
+    };
+
+    let file = File::open("/dev/tty").map(|file| (FileDesc::new(file.into_raw_fd(), true)));
+    let fd = if let Ok(file) = &file {
+        file.raw_fd()
+    } else {
+        // Fallback to libc::STDOUT_FILENO if /dev/tty is missing
+        STDOUT_FILENO
+    };
+
+    if wrap_with_result(unsafe { ioctl(fd, TIOCGWINSZ.into(), &mut size) }).is_ok() {
+        return Ok(PixelSize {
+            cols: size.ws_col,
+            rows: size.ws_row,
+            xpixels: size.ws_xpixel,
+            ypixels: size.ws_ypixel,
+        });
+    }
+
+    Err(std::io::Error::last_os_error().into())
 }
 
 pub(crate) fn enable_raw_mode() -> io::Result<()> {

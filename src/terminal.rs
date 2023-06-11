@@ -137,6 +137,20 @@ pub fn size() -> io::Result<(u16, u16)> {
     sys::size()
 }
 
+#[allow(dead_code)]
+#[derive(Debug)]
+pub struct PixelSize {
+    cols: u16,
+    rows: u16,
+    xpixels: u16,
+    ypixels: u16,
+}
+
+/// Returns the terminal pixel size.
+pub fn pixel_size() -> io::Result<PixelSize> {
+    sys::pixel_size()
+}
+
 /// Disables line wrapping.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DisableLineWrap;
